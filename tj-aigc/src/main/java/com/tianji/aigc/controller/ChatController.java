@@ -9,10 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import reactor.core.publisher.Flux;
 
@@ -32,6 +29,10 @@ public class ChatController {
         String sessionId = chatDTO == null ? null : chatDTO.getSessionId();
         String question = chatDTO == null ? null : chatDTO.getQuestion();
         return chatService.chat(sessionId, question);
+    }
 
+    @PostMapping("/stop")
+    public void stop(@RequestParam String sessionId){
+        chatService.stop(sessionId);
     }
 }
