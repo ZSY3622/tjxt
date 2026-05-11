@@ -1,7 +1,9 @@
 package com.tianji.aigc.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.tianji.aigc.config.SystemPromptConfig;
 import com.tianji.aigc.enums.ChatEventTypeEnum;
 import com.tianji.aigc.service.ChatService;
 import com.tianji.aigc.vo.ChatEventVO;
@@ -28,10 +30,16 @@ import java.util.Map;
 public class ChatServiceImpl implements ChatService {
 //    @Qualifier("chatClient1") 用于指定bean
     private final ChatClient chatClient;
+    private final SystemPromptConfig systemPromptConfig;
 
     @Override
     public Flux<ChatEventVO> chat(String sessionId, String question) {
+        System.out.println(systemPromptConfig.getChatSystemMessage().get());
+
         return this.chatClient.prompt()
+                .system(promptSystem -> promptSystem.text(systemPromptConfig.getChatSystemMessage().get()) //设置提示词
+                        .param("now", DateUtil.now()) //设置提示词中的时间参数
+                )
                 .user(question)
                 .stream()
                 .chatResponse()
