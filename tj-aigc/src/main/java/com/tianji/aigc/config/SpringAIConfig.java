@@ -1,5 +1,6 @@
 package com.tianji.aigc.config;
 
+import com.tianji.aigc.memory.MysqlChatMemoryRepository;
 import com.tianji.aigc.memory.RedisChatMemoryRepository;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -9,6 +10,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,8 +41,15 @@ public class SpringAIConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(value = "type" ,prefix ="tj.ai.memory" ,havingValue = "Redis")
     public ChatMemoryRepository redisChatMemoryRepository() {
         return new RedisChatMemoryRepository(); //重构的ChatMemoryRepository
+    }
+
+    @Bean
+    @ConditionalOnProperty(value = "type" ,prefix ="tj.ai.memory" ,havingValue = "Mysql")
+    public ChatMemoryRepository mysqlChatMemoryRepository() {
+        return new MysqlChatMemoryRepository(); //重构的ChatMemoryRepository
     }
 
     @Bean
@@ -60,4 +69,11 @@ public class SpringAIConfig {
         // 创建基于 chatMemory 的 Advisor 对象
         return MessageChatMemoryAdvisor.builder(chatMemory).build();
     }
+
+
+
+
+
+
+
 }

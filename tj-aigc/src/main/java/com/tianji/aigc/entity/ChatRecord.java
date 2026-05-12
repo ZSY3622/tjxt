@@ -1,6 +1,8 @@
 package com.tianji.aigc.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +15,8 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("chat_session")
-public class ChatSession implements Serializable {
+@TableName("chat_record")
+public class ChatRecord implements Serializable {
 
     /**
      * 数据id
@@ -25,17 +27,12 @@ public class ChatSession implements Serializable {
     /**
      * 会话id
      */
-    private String sessionId;
+    private String conversationId;
 
     /**
-     * 用户id
+     * 消息数据，保存序列化后的上下文内容
      */
-    private Long userId;
-
-    /**
-     * 会话标题
-     */
-    private String title;
+    private String data;
 
     /**
      * 创建时间
@@ -50,12 +47,10 @@ public class ChatSession implements Serializable {
     /**
      * 创建人
      */
-    @TableField(fill = FieldFill.INSERT)
     private Long creater;
 
     /**
      * 更新人
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updater;
 }
