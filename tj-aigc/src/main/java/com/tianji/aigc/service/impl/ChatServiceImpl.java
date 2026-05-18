@@ -11,6 +11,7 @@ import com.tianji.aigc.constants.Constant;
 import com.tianji.aigc.enums.ChatEventTypeEnum;
 import com.tianji.aigc.service.ChatService;
 import com.tianji.aigc.vo.ChatEventVO;
+import com.tianji.common.utils.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -56,12 +57,14 @@ public class ChatServiceImpl implements ChatService {
         // 生成请求id
         String requestId = IdUtil.fastSimpleUUID();
 
+        Long userId = UserContext.getUser();
+
         return this.chatClient.prompt()
                 .system(promptSystem -> promptSystem.text(systemPromptConfig.getChatSystemMessage().get()) //设置提示词
                         .param("now", DateUtil.now()) //设置提示词中的时间参数
                 )
                 .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID,conversationId))// 生成对话id的逻辑
-                .toolContext(Map.of(Constant.REQUEST_ID,requestId)) // 通过工具上下文传递工具
+                .toolContext(Map.of(Constant.REQUEST_ID,requestId,Constant.USER_ID,userId)) // 通过工具上下文传递工具
                 .user(question)
                 .stream()
                 .chatResponse()
@@ -86,7 +89,7 @@ public class ChatServiceImpl implements ChatService {
                     Map<String, Object> map = ToolResultHolder.get(requestId);
                     if (CollUtil.isNotEmpty(map)){
                         ToolResultHolder.remove(requestId); // 清除参数列表
-                        //相应给前端
+                        //将通过tools得到对应的数据返回给前端
                         ChatEventVO chatEventVO = ChatEventVO.builder().eventData(map).eventType(ChatEventTypeEnum.PARAM.getValue()).build();
                         return Flux.just(chatEventVO,STOP_EVENT);
                     }
