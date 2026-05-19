@@ -76,6 +76,13 @@ public class ChatServiceImpl implements ChatService {
                 })//中断输出,执行
                 .takeWhile(chatResponse -> GENERATE_STATUS.getOrDefault(sessionId,false)) //根据sessionIdd 状态来判断是否停止生成
                 .map(chatResponse -> {
+                    // 对于响应结果进行处理，如果是最后一条数据，就把此次消息id放到内存中 ,因为工具也是最后输出给前端的
+                    String finishReason = chatResponse.getResult().getMetadata().getFinishReason();
+                    if (StrUtil.equals(Constant.STOP, finishReason)) {
+                        String messageId = chatResponse.getMetadata().getId();
+                        // 将消息id与请求id相关联
+                        ToolResultHolder.put(messageId, Constant.REQUEST_ID, requestId);
+                    }
                     // 获取大模型的输出的文字内容
                     String text = chatResponse.getResult().getOutput().getText();
                     outputBuilder.append(text); //加入缓存
@@ -84,12 +91,13 @@ public class ChatServiceImpl implements ChatService {
                             .eventData(text)
                             .eventType(ChatEventTypeEnum.DATA.getValue())
                             .build();
-                }).concatWith(Flux.defer(()->{
+                })
+                .concatWith(Flux.defer(()->{
                     // 通过请求id获取到参数列表，如果不为空，就将其追加到返回结果中
                     Map<String, Object> map = ToolResultHolder.get(requestId);
                     if (CollUtil.isNotEmpty(map)){
                         ToolResultHolder.remove(requestId); // 清除参数列表
-                        //将通过tools得到对应的数据返回给前端
+                        // 将通过tools得到对应的数据返回给前端
                         ChatEventVO chatEventVO = ChatEventVO.builder().eventData(map).eventType(ChatEventTypeEnum.PARAM.getValue()).build();
                         return Flux.just(chatEventVO,STOP_EVENT);
                     }
