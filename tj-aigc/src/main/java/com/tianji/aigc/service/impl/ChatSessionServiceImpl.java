@@ -12,6 +12,7 @@ import com.tianji.aigc.mapper.ChatSessionMapper;
 import com.tianji.aigc.memory.MyAssistantMessage;
 import com.tianji.aigc.service.ChatService;
 import com.tianji.aigc.service.ChatSessionService;
+import com.tianji.aigc.vo.ChatSessionVO;
 import com.tianji.aigc.vo.MessageVO;
 import com.tianji.aigc.vo.SessionVO;
 import com.tianji.common.utils.UserContext;
@@ -26,7 +27,9 @@ import com.tianji.aigc.config.SessionProperties;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -84,6 +87,93 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
             chatSession.setUpdateTime(LocalDateTime.now());
             super.updateById(chatSession);
         }
+    }
+
+    @Override
+    public Map<String, List<ChatSessionVO>> queryHistorySession() {
+        final var TODAY = "当天";
+        final var LAST_30_DAYS = "最近30天";
+        final var LAST_YEAR = "最近1年";
+        final var MORE_THAN_YEAR = "1年以上";
+
+        Map<String, List<ChatSessionVO>> result = new LinkedHashMap<>();
+        result.put(MORE_THAN_YEAR, CollUtil.newArrayList());
+        result.put(LAST_YEAR, CollUtil.newArrayList());
+        result.put(LAST_30_DAYS, CollUtil.newArrayList());
+        result.put(TODAY, CollUtil.newArrayList());
+
+        Long userId = UserContext.getUser();
+        if (userId == null) {
+            return result;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime todayStart = now.toLocalDate().atStartOfDay();
+        LocalDateTime last30DaysStart = now.minusDays(30);
+        LocalDateTime lastYearStart = now.minusYears(1);
+
+        List<ChatSession> sessions = this.lambdaQuery()
+                .eq(ChatSession::getUserId, userId)
+                .isNotNull(ChatSession::getUpdateTime)
+                .orderByDesc(ChatSession::getUpdateTime)
+                .last("limit 30")
+                .list();
+
+        for (ChatSession session : sessions) {
+            LocalDateTime updateTime = session.getUpdateTime();
+            ChatSessionVO vo = ChatSessionVO.builder()
+                    .sessionId(session.getSessionId())
+                    .title(session.getTitle())
+                    .updateTime(updateTime)
+                    .build();
+
+            if (!updateTime.isBefore(todayStart)) {
+                result.get(TODAY).add(vo);
+            } else if (!updateTime.isBefore(last30DaysStart)) {
+                result.get(LAST_30_DAYS).add(vo);
+            } else if (!updateTime.isBefore(lastYearStart)) {
+                result.get(LAST_YEAR).add(vo);
+            } else {
+                result.get(MORE_THAN_YEAR).add(vo);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public void deleteHistorySession(String sessionId) {
+        if (StrUtil.isBlank(sessionId)) {
+            return;
+        }
+        Long userId = UserContext.getUser();
+        if (userId == null) {
+            return;
+        }
+        //删除数据库中的数据
+        this.lambdaUpdate()
+                .eq(ChatSession::getSessionId, sessionId)
+                .eq(ChatSession::getUserId, userId)
+                .remove();
+        //删除redis中的数据
+        chatMemory.clear(ChatService.getConversationId(sessionId));
+    }
+
+    @Override
+    public void updateHistorySessionTitle(String sessionId, String title) {
+        if (StrUtil.isBlank(sessionId) || StrUtil.isBlank(title)) {
+            return;
+        }
+        Long userId = UserContext.getUser();
+        if (userId == null) {
+            return;
+        }
+        this.lambdaUpdate()
+                .eq(ChatSession::getSessionId, sessionId)
+                .eq(ChatSession::getUserId, userId)
+                .set(ChatSession::getTitle, StrUtil.sub(title, 0, 100))
+                .set(ChatSession::getUpdateTime, LocalDateTime.now())
+                .update();
     }
 
     @Override
