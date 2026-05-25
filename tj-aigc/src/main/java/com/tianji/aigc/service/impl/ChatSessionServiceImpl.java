@@ -1,8 +1,10 @@
 package com.tianji.aigc.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tianji.aigc.entity.ChatSession;
 import com.tianji.aigc.enums.MessageTypeEnum;
@@ -18,9 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.tianji.aigc.config.SessionProperties;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,6 +57,33 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
                             .type(MessageTypeEnum.valueOf(message.getMessageType().name()))
                             .build();
                 }).toList();
+    }
+    /**
+     * 异步更新聊天会话的标题
+     *
+     * @param sessionId 会话ID，用于标识特定的聊天会话
+     * @param title     新的会话标题，如果为空则不进行更新
+     * @param userId    用户ID
+     */
+    @Override
+    @Async //异步执行
+    public void update(String sessionId, String title, Long userId) {
+        //查找对应的聊天会话列表
+        List<ChatSession> list = this.lambdaQuery()
+                .eq(ChatSession::getSessionId, sessionId)
+                .eq(ChatSession::getUserId, userId)
+                .list();
+        //没对应列表
+        if (CollUtil.isEmpty(list)){
+            return;
+        }
+        // 获取列表中的第一个聊天会话实例
+        ChatSession chatSession = list.get(0);
+        if (StrUtil.isEmpty(chatSession.getTitle()) && StrUtil.isNotEmpty(title)){
+            chatSession.setTitle(StrUtil.sub(title, 0, 100));
+            chatSession.setUpdateTime(LocalDateTime.now());
+            super.updateById(chatSession);
+        }
     }
 
     @Override

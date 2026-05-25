@@ -10,6 +10,7 @@ import com.tianji.aigc.config.ToolResultHolder;
 import com.tianji.aigc.constants.Constant;
 import com.tianji.aigc.enums.ChatEventTypeEnum;
 import com.tianji.aigc.service.ChatService;
+import com.tianji.aigc.service.ChatSessionService;
 import com.tianji.aigc.vo.ChatEventVO;
 import com.tianji.common.utils.UserContext;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,8 @@ public class ChatServiceImpl implements ChatService {
     //支持多线程安全访问
     private static final Map<String, Boolean> GENERATE_STATUS = new ConcurrentHashMap<>();
 
+    private final ChatSessionService chatSessionService;
+
     // 输出结束的标记
     private static final ChatEventVO STOP_EVENT = ChatEventVO.builder().eventType(ChatEventTypeEnum.STOP.getValue()).build();
 
@@ -63,6 +66,9 @@ public class ChatServiceImpl implements ChatService {
         String requestId = IdUtil.fastSimpleUUID();
 
         Long userId = UserContext.getUser();
+
+
+        chatSessionService.update(sessionId,question,userId);
 
         //创建RA增强
         QuestionAnswerAdvisor questionAnswerAdvisor = QuestionAnswerAdvisor.builder(vectorStore)
