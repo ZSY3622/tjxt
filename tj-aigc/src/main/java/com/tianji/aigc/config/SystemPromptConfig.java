@@ -42,6 +42,11 @@ public class SystemPromptConfig {
 
     private final AtomicReference<String> recommendAgentSystemMessage = new AtomicReference<>();
 
+    private final AtomicReference<String> buyAgentSystemMessage = new AtomicReference<>();
+
+    private final AtomicReference<String> consultAgentSystemMessage = new AtomicReference<>();
+
+    private final AtomicReference<String> knowledgeAgentSystemMessage = new AtomicReference<>();
 
     /**
      * Spring 创建并注入完当前 Bean 后会执行这个方法。
@@ -54,7 +59,9 @@ public class SystemPromptConfig {
         // 读取配置
         loadConfig(aiProperties.getSystem().getRouteAgent(), routeAgentSystemMessage);
         loadConfig(aiProperties.getSystem().getRecommendAgent(),recommendAgentSystemMessage);
-
+        loadConfig(aiProperties.getSystem().getBuyAgent(),buyAgentSystemMessage);
+        loadConfig(aiProperties.getSystem().getConsultAgent(),consultAgentSystemMessage);
+        loadConfig(aiProperties.getSystem().getKnowledgeAgent(),knowledgeAgentSystemMessage);
 
     }
 

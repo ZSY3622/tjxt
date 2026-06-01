@@ -128,14 +128,16 @@ public abstract class AbstractAgent implements Agent {
     private ChatClient.ChatClientRequestSpec getChatClientRequest(String sessionId, String requestId, String question){
         return this.chatClient.prompt()
                 .system(promptSystem -> promptSystem.text(this.systemMessage()).params(this.systemMessageParams()))
-                .advisors(advisorSpec -> advisorSpec.advisors(this.advisors()).params(this.advisorParams(sessionId,requestId)))
-                .tools(this.tools())
+                .advisors(advisorSpec -> advisorSpec.advisors(this.advisors()).params(this.advisorParams(sessionId,requestId))) //注入advisors，只需要重写对应方法即可
+                .tools(this.tools()) //注入工具类
                 .toolContext(this.toolContext(sessionId,requestId))
                 .user(question);
     }
+
     private String generateRequestId(){
         return IdUtil.fastSimpleUUID();
     }
+
     private void saveStopHistoryRecord(String conversationId, String content) {
         chatMemory.add(conversationId, new AssistantMessage(content));
     }
