@@ -38,6 +38,11 @@ public class SystemPromptConfig {
      */
     private final AtomicReference<String> chatSystemMessage = new AtomicReference<>();
 
+    private final AtomicReference<String> routeAgentSystemMessage = new AtomicReference<>();
+
+    private final AtomicReference<String> recommendAgentSystemMessage = new AtomicReference<>();
+
+
     /**
      * Spring 创建并注入完当前 Bean 后会执行这个方法。
      * 服务启动时先主动从 Nacos 拉取一次配置，避免等到配置变更后才有系统提示词。
@@ -46,6 +51,11 @@ public class SystemPromptConfig {
     public void init() {
         // 加载聊天场景的系统提示词，并把内容保存到 chatSystemMessage 中。
         loadConfig(aiProperties.getSystem().getChat(), chatSystemMessage);
+        // 读取配置
+        loadConfig(aiProperties.getSystem().getRouteAgent(), routeAgentSystemMessage);
+        loadConfig(aiProperties.getSystem().getRecommendAgent(),recommendAgentSystemMessage);
+
+
     }
 
     /**

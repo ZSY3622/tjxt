@@ -97,6 +97,15 @@ public class ChatServiceImpl implements ChatService {
                     saveStopHistoryRecord(conversationId, outputBuilder.toString());
                 })//中断输出,执行
                 .takeWhile(chatResponse -> GENERATE_STATUS.getOrDefault(sessionId, false)) //根据sessionIdd 状态来判断是否停止生成
+                .doOnNext(chatResponse -> {
+                    int i =0;
+                    String messageId = chatResponse.getMetadata().getId();
+                    String finishReason = chatResponse.getResult().getMetadata().getFinishReason();
+                    String text = chatResponse.getResult().getOutput().getText();
+                    log.info(requestId);
+                    log.info("第{}次流式响应: messageId={}, finishReason={}, text={}",
+                            i++, messageId, finishReason, text);
+                })
                 .map(chatResponse -> {
                     // 对于响应结果进行处理，如果是最后一条数据，就把此次消息id放到内存中 ,因为工具也是最后输出给前端的
                     String finishReason = chatResponse.getResult().getMetadata().getFinishReason();
