@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Map;
 
-public class MysqlChatMemoryRepository implements ChatMemoryRepository {
+public class MysqlChatMemoryRepository implements ChatMemoryRepository,MyChatMemoryRepository{
     @Resource
     private ChatRecordService chatRecordService;
 
@@ -54,5 +54,10 @@ public class MysqlChatMemoryRepository implements ChatMemoryRepository {
     @Override
     public void deleteByConversationId(String conversationId) {
         chatRecordService.removeByConversationId(conversationId);
+    }
+
+    @Override
+    public void optimization(String conversationId) {
+        //TODO  待完成
     }
 }

@@ -72,7 +72,7 @@ public class ChatServiceImpl implements ChatService {
 
         chatSessionService.update(sessionId,question,userId);
 
-        //创建RA增强
+        //创建RAG增强
         QuestionAnswerAdvisor questionAnswerAdvisor = QuestionAnswerAdvisor.builder(vectorStore)
                 .searchRequest(
                         SearchRequest.builder().similarityThreshold(0.6d) //相似度阈值

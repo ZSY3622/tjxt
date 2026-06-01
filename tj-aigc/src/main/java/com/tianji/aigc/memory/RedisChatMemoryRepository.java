@@ -16,7 +16,7 @@ import java.util.Set;
 /**
  * 重构报存上下文信息，原本实现为内存报存，服务重启后就消失
  */
-public class RedisChatMemoryRepository implements ChatMemoryRepository {
+public class RedisChatMemoryRepository implements ChatMemoryRepository,MyChatMemoryRepository{
 
 
     // 默认redis中key的前缀
@@ -95,5 +95,14 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
 
     private String getKey(String conversationId) {
         return prefix + conversationId;
+    }
+
+    @Override
+    public void optimization(String conversationId) {
+        var redisKey = this.getKey(conversationId);
+        //获取对应的数据
+        var listOps = this.stringRedisTemplate.boundListOps(redisKey);
+        // 从Redis列表右侧弹出2个元素
+        listOps.rightPop(2);
     }
 }

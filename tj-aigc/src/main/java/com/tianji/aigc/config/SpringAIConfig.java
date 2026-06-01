@@ -1,5 +1,7 @@
 package com.tianji.aigc.config;
 
+import com.tianji.aigc.advisor.RecordOptimizationAdvisor;
+import com.tianji.aigc.memory.MyChatMemoryRepository;
 import com.tianji.aigc.memory.MysqlChatMemoryRepository;
 import com.tianji.aigc.memory.RedisChatMemoryRepository;
 import com.tianji.aigc.tools.CourseTools;
@@ -29,11 +31,12 @@ public class SpringAIConfig {
     public ChatClient chatClient(ChatClient.Builder chatClientBuilder,
                                  Advisor loggerAdvisor,
                                  Advisor messageChatMemoryAdvisor,
+                                 Advisor recordOptimizationAdvisor,
                                  CourseTools courseTools,
                                  OrderTools orderTools
     ) {  // 日志记录器
         return chatClientBuilder
-                .defaultAdvisors(loggerAdvisor,messageChatMemoryAdvisor) //添加 Advisor 功能增强
+                .defaultAdvisors(loggerAdvisor,messageChatMemoryAdvisor,recordOptimizationAdvisor) //添加 Advisor 功能增强
 //                .defaultTools(courseTools,orderTools) //添加默认工具
                 .build();
     }
@@ -48,13 +51,13 @@ public class SpringAIConfig {
 
     @Bean
     @ConditionalOnProperty(value = "type" ,prefix ="tj.ai.memory" ,havingValue = "Redis")
-    public ChatMemoryRepository redisChatMemoryRepository() {
+    public RedisChatMemoryRepository redisChatMemoryRepository() {
         return new RedisChatMemoryRepository(); //重构的ChatMemoryRepository
     }
 
     @Bean
     @ConditionalOnProperty(value = "type" ,prefix ="tj.ai.memory" ,havingValue = "Mysql")
-    public ChatMemoryRepository mysqlChatMemoryRepository() {
+    public MysqlChatMemoryRepository mysqlChatMemoryRepository() {
         return new MysqlChatMemoryRepository(); //重构的ChatMemoryRepository
     }
 
@@ -76,7 +79,10 @@ public class SpringAIConfig {
         return MessageChatMemoryAdvisor.builder(chatMemory).build();
     }
 
-
+    @Bean
+    public Advisor recordOptimizationAdvisor(MyChatMemoryRepository myChatMemoryRepository){
+        return new RecordOptimizationAdvisor(myChatMemoryRepository);
+    }
 
 
 
