@@ -13,7 +13,6 @@ import com.tianji.aigc.service.ChatService;
 import com.tianji.aigc.service.ChatSessionService;
 import com.tianji.aigc.vo.ChatEventVO;
 import com.tianji.common.utils.UserContext;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
@@ -39,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "tj.ai",name = "chat-type" , havingValue = "ENHANCE")
 public class ChatServiceImpl implements ChatService {
     //    @Qualifier("chatClient1") 用于指定bean
@@ -57,6 +55,21 @@ public class ChatServiceImpl implements ChatService {
     // 输出结束的标记
     private static final ChatEventVO STOP_EVENT = ChatEventVO.builder().eventType(ChatEventTypeEnum.STOP.getValue()).build();
 
+    private final ChatClient openAiChatClient;
+
+    public ChatServiceImpl(ChatMemory chatMemory,
+                           VectorStore vectorStore,
+                           ChatClient chatClient,
+                           SystemPromptConfig systemPromptConfig,
+                           ChatSessionService chatSessionService,
+                           @Qualifier("openAiChatClient") ChatClient openAiChatClient) {
+        this.chatMemory = chatMemory;
+        this.vectorStore = vectorStore;
+        this.chatClient = chatClient;
+        this.systemPromptConfig = systemPromptConfig;
+        this.chatSessionService = chatSessionService;
+        this.openAiChatClient = openAiChatClient;
+    }
 
     @Override
     public Flux<ChatEventVO> chat(String sessionId, String question) {
@@ -143,6 +156,16 @@ public class ChatServiceImpl implements ChatService {
 //        GENERATE_STATUS.put(sessionId,false);
         GENERATE_STATUS.remove(sessionId);//删除
 
+    }
+
+    @Override
+    public String chatText(String question) {
+        log.info("chatText 使用 openAiChatClient 处理文本请求");
+        return this.openAiChatClient.prompt()
+                .system(promptSystemSpec -> promptSystemSpec.text(this.systemPromptConfig.getTextSystemMessage().get()))
+                .user(question)
+                .call()
+                .content();
     }
 
     private void saveStopHistoryRecord(String conversationId, String content) {

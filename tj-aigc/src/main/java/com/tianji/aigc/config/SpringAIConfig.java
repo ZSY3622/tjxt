@@ -6,6 +6,7 @@ import com.tianji.aigc.memory.MysqlChatMemoryRepository;
 import com.tianji.aigc.memory.RedisChatMemoryRepository;
 import com.tianji.aigc.tools.CourseTools;
 import com.tianji.aigc.tools.OrderTools;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -13,11 +14,16 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
+@Slf4j
 @Configuration
 public class SpringAIConfig {
 
@@ -28,6 +34,7 @@ public class SpringAIConfig {
      * 配置 ChatClient
      */
     @Bean
+    @Primary
     public ChatClient chatClient(ChatClient.Builder chatClientBuilder,
                                  Advisor loggerAdvisor,
                                  Advisor messageChatMemoryAdvisor,
@@ -40,6 +47,36 @@ public class SpringAIConfig {
 //                .defaultTools(courseTools,orderTools) //添加默认工具
                 .build();
     }
+
+    @Bean("openAiChatClient")
+    @ConditionalOnProperty(prefix = "spring.ai.openai", name = "api-key")
+    public ChatClient openAiChatClient(
+            @Value("${spring.ai.openai.api-key}") String apiKey,
+            @Value("${spring.ai.openai.base-url}") String baseUrl,
+            @Value("${spring.ai.openai.chat.options.model}") String model,
+            Advisor loggerAdvisor
+    ) {
+        OpenAiApi openAiApi = OpenAiApi.builder()
+                .apiKey(apiKey)
+                .baseUrl(baseUrl)
+                .build();
+
+        OpenAiChatModel openAiChatModel = OpenAiChatModel.builder()
+                .openAiApi(openAiApi)
+                .defaultOptions(OpenAiChatOptions.builder().model(model).build())
+                .build();
+
+        log.info("初始化 openAiChatClient，实际ChatModel={}，实际model={}，baseUrl={}",
+                openAiChatModel.getClass().getName(),
+                openAiChatModel.getDefaultOptions().getModel(),
+                baseUrl);
+
+        return ChatClient.builder(openAiChatModel)
+                .defaultAdvisors(loggerAdvisor)
+                .build();
+    }
+
+
 
     /**
      * 日志记录器,记录 ChatClient 调用大模型时的日志。

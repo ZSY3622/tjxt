@@ -48,6 +48,7 @@ public class SystemPromptConfig {
 
     private final AtomicReference<String> knowledgeAgentSystemMessage = new AtomicReference<>();
 
+    private final AtomicReference<String> textSystemMessage = new AtomicReference<>();
     /**
      * Spring 创建并注入完当前 Bean 后会执行这个方法。
      * 服务启动时先主动从 Nacos 拉取一次配置，避免等到配置变更后才有系统提示词。
@@ -62,6 +63,7 @@ public class SystemPromptConfig {
         loadConfig(aiProperties.getSystem().getBuyAgent(),buyAgentSystemMessage);
         loadConfig(aiProperties.getSystem().getConsultAgent(),consultAgentSystemMessage);
         loadConfig(aiProperties.getSystem().getKnowledgeAgent(),knowledgeAgentSystemMessage);
+        loadConfig(aiProperties.getSystem().getText(),textSystemMessage);
 
     }
 

@@ -35,4 +35,14 @@ public class ChatController {
     public void stop(@RequestParam String sessionId){
         chatService.stop(sessionId);
     }
+
+    /**
+     * 文本聊天接口，该接口不保存记录
+     * @param question
+     * @return
+     */
+    @PostMapping("/text")
+    public String chatText(@RequestBody String question) {
+        return this.chatService.chatText(question);
+    }
 }

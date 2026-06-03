@@ -22,4 +22,11 @@ public interface ChatService {
     static String getConversationId(String sessionId) {
         return UserContext.getUser() + "_" + sessionId;
     }
+
+    /**
+     * 文本聊天
+     * @param question
+     * @return
+     */
+    String chatText(String question);
 }
