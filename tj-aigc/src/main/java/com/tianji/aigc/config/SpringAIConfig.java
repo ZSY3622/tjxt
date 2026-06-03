@@ -14,8 +14,11 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.openai.OpenAiAudioSpeechModel;
+import org.springframework.ai.openai.OpenAiAudioSpeechOptions;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiAudioApi;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -75,6 +78,17 @@ public class SpringAIConfig {
                 .defaultAdvisors(loggerAdvisor)
                 .build();
     }
+
+//    @Bean("qwenTts")
+//    @ConditionalOnProperty(prefix = "llm.qwen3-tts-vd-2026-01-26", name = "api-key")
+//    public QwenTtsClient qwenTts(
+//            @Value("${llm.qwen3-tts-vd-2026-01-26.api-key}") String apiKey,
+//            @Value("${llm.qwen3-tts-vd-2026-01-26.base-url}") String baseUrl,
+//            @Value("${llm.qwen3-tts-vd-2026-01-26.model}") String model,
+//            @Value("${llm.qwen3-tts-vd-2026-01-26.voice:alloy}") String voice
+//    ){
+//
+//    }
 
 
 
