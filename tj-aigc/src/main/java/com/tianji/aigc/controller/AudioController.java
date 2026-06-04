@@ -17,9 +17,15 @@ public class AudioController {
     public ResponseBodyEmitter ttsStream(@RequestBody String text) {
         return this.audioService.ttsStream(text);
     }
+
+    /**
+     *  语音转文字
+     * @param audioFile
+     * @return
+     */
+
     @PostMapping("/stt")
     public String stt(@RequestParam("audioFile") MultipartFile audioFile) {
-//        return this.audioService.stt(audioFile);
-        return "";
+        return this.audioService.stt(audioFile);
     }
 }
